@@ -1,0 +1,77 @@
+"""
+Jonathan Leonard                                         NRE 5585 Python Scripting for Geospatial Analysis
+Final Project:      GPX and KML to Shapefile             December 1, 2021
+"""
+
+'''
+Import relevant packages for script
+Set up drive paths where we will work, and where our data will be saved
+'''
+print('Initializing...')
+import arcpy
+import numpy as np
+import os
+dl = 'C:/'
+root_dir = dl + 'NRE_5585/Final_Project/'
+gpx_dir_path = dl + 'NRE_5585/Final_Project/gpxFiles/'
+kml_dir_path = dl + 'NRE_5585/Final_Project/kmlFiles/'
+lyr2shp_fldr = dl + 'NRE_5585/Final_Project/lyr2shpFiles/'
+kml2shp_fldr = dl + 'NRE_5585/Final_Project/kml2shp/'
+gpx2shp_fldr = dl + 'NRE_5585/Final_Project/gpx2shp/'
+#master_location = dl + 'NRE_5585/Final_Project/master/'
+start_time = time.time()
+
+
+# Create new folders to store new shapefiles and layers
+
+if not os.path.exists(kml2shp_fldr):
+    os.makedirs(kml2shp_fldr)
+if not os.path.exists(gpx2shp_fldr):
+    os.makedirs(gpx2shp_fldr)
+if not os.path.exists(lyr2shp_fldr):
+    os.makedirs(lyr2shp_fldr)
+
+'''
+Iterate through parent folders, then through each file in folder. If the file ends with .gpx that's what we're looking for.
+Split the file name, remove the .gpx, and replace that with .shp
+From there, run the new file name object through the function GPXtoFeatures_conversion to yield a new (shape) file
+'''
+for subdir, dirs, files in os.walk(root_dir):
+    for file in files:
+        if file.endswith('.gpx'):
+            full_gpx_path = os.path.join(gpx_dir_path, file)
+            gpx2shp = os.path.splitext(full_gpx_path)[0] + ".shp"
+            print(gpx2shp)
+            try:
+                arcpy.GPXtoFeatures_conversion(full_gpx_path, gpx2shp)
+                print(f"Converting {full_gpx_path} to shapefile \n")
+            except Exception as fail:
+                print(f"Failed to convert\n {fail}")
+
+        if file.endswith('.kml'):
+            arcpy.env.workspace = kml2shp_fldr
+            full_kml_path = os.path.join(kml_dir_path, file)
+            try:
+                arcpy.KMLToLayer_conversion(full_kml_path, kml2shp_fldr)
+                print(f"Converting {full_kml_path} to layer file \n")
+            except Exception as fail:
+                print(f"Failed to convert\n {fail}")
+        lst = os.listdir(kml2shp_fldr)
+        print("kml2shp_fldr contains =", lst)
+
+    #for file in files:
+        if file.endswith('.lyrx'):
+            #full_lyr_path = os.path.join(kml2shp_fldr, file)
+            #lyr2shp = os.path.splitext(full_lyr_path)[0] + ".shp"
+            #print(lyr2shp)
+            try:
+                #arcpy.conversion.FeatureClassToShapefile(file, lyr2shp_fldr)
+                arcpy.FeatureClassToShapefile_conversion(file, lyr2shp_fldr)
+                print(f"Converting {full_lyr_path} to shapefile \n")
+            except Exception as fail:
+                print(f"Failed to convert\n {fail}")
+
+print("All files converted to shapefiles")
+end_time = time.time()
+completion_time = end_time - start_time
+print(f'Script completed in {completion_time:0.3f} seconds')
